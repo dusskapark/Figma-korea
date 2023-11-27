@@ -1,45 +1,42 @@
-import React from 'react';
-import logo from '../assets/logo.svg';
+// App.tsx
+import React, { useState } from 'react';
 import '../styles/ui.css';
 
 function App() {
-  const textbox = React.useRef<HTMLInputElement>(undefined);
+  const [values, setValues] = useState('1, 3, 10, 28, 41, 87, 100, 114, 94, 68, 50, 23, 9, 3, 1');
+  const [error, setError] = useState('');
 
-  const countRef = React.useCallback((element: HTMLInputElement) => {
-    if (element) element.value = '5';
-    textbox.current = element;
-  }, []);
+  const createBarChart = () => {
+    const text = values;
 
-  const onCreate = () => {
-    const count = parseInt(textbox.current.value, 10);
-    parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*');
+    let numbers = text.split(',').map(x => +x);
+    if (numbers.length < 2) {
+      showError('Error: Must have at least two values');
+      return;
+    }
+    if (numbers.some(x => isNaN(x))) {
+      showError('Error: All values must be numbers');
+      return;
+    }
+
+    parent.postMessage({ pluginMessage: numbers }, '*');
   };
 
-  const onCancel = () => {
-    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+  const showError = (errorMessage) => {
+    setError(errorMessage);
   };
-
-  React.useEffect(() => {
-    // This is how we read messages sent from the plugin controller
-    window.onmessage = (event) => {
-      const { type, message } = event.data.pluginMessage;
-      if (type === 'create-rectangles') {
-        console.log(`Figma Says: ${message}`);
-      }
-    };
-  }, []);
 
   return (
     <div>
-      <img src={logo} />
-      <h2>Rectangle Creator</h2>
+      <h2>Bar Chart Sample</h2>
       <p>
-        Count: <input ref={countRef} />
+        Values:
+        <input value={values} onChange={(e) => setValues(e.target.value)} />
       </p>
-      <button id="create" onClick={onCreate}>
-        Create
-      </button>
-      <button onClick={onCancel}>Cancel</button>
+      <b>{error}</b>
+      <p>
+        <button onClick={createBarChart}>Create Bar Chart</button>
+      </p>
     </div>
   );
 }
